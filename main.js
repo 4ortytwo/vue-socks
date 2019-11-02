@@ -1,7 +1,52 @@
+Vue.component("product-review", {
+  template: `
+  <form class="review-form" @submit.prevent="onSubmit">
+    <p>
+      <label for="name">Name:</label>
+      <input id="name" v-model="name">
+    </p>
+    <p>
+      <label for="review">Review:</label>
+      <textarea id="review" v-model="review"></textarea>
+    </p>
+    <p>
+      <label for="rating">Rating:</label>
+      <select id="rating" v-model.number="rating">
+      <option v-for="option in options">{{option}}</option>
+      </select>
+    </p>
+    <p>
+      <input type="submit" value="submit">
+    </p>
+  </form>
+  `,
+  data() {
+    return {
+      name: null,
+      review: null,
+      rating: null,
+      options: [5, 4, 3, 2, 1]
+    };
+  },
+  methods: {
+    onSubmit() {
+      let productReview = {
+        name: this.name,
+        review: this.review,
+        rating: this.rating
+      };
+      this.$emit("review-submitted", productReview);
+      this.name = null;
+      this.review = null;
+      this.rating = null;
+    }
+  }
+});
+
 Vue.component("product", {
   props: {
     premium: {
-      type: Boolean, 
+      type: Boolean,
       required: true
     }
   },
@@ -36,9 +81,8 @@ Vue.component("product", {
             Add to Cart
           </button>
 
-          <div class="cart">
-            <p>Cart({{ cart }})</p>
-          </div>
+          <product-review @review-submitted="addReview"></product-review>
+
         </div>
       </div>
   `,
@@ -62,16 +106,18 @@ Vue.component("product", {
           variantQuantity: 0
         }
       ],
-      cart: 0
+      reviews: []
     };
   },
   methods: {
     addToCart() {
-      console.log("i'mhere");
-      this.cart += 1;
+      this.$emit("add-to-cart", this.variants[this.selectedVariant].variantId);
     },
     updateProduct(index) {
       this.selectedVariant = index;
+    },
+    addReview(productReview) {
+      this.reviews.push(productReview);
     }
   },
   computed: {
@@ -85,10 +131,10 @@ Vue.component("product", {
       return this.variants[this.selectedVariant].variantQuantity;
     },
     shipping() {
-      if( this.premium) {
-      return "Free"
+      if (this.premium) {
+        return "Free";
       }
-      return 2.99
+      return 2.99;
     }
   }
 });
@@ -96,6 +142,12 @@ Vue.component("product", {
 var app = new Vue({
   el: "#app",
   data: {
-  premium: true
+    premium: true,
+    cart: []
+  },
+  methods: {
+    updateCart(id) {
+      this.cart.push(id);
+    }
   }
 });
